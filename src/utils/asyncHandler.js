@@ -1,0 +1,26 @@
+
+
+
+
+
+
+const asyncHandler=(requestHandler)=>{
+           (req, res, next)=>{
+            Promise.resolve(requestHandler(req,res,next)).catch((err)=>next(err))
+           }
+}
+
+
+export {asyncHandler};
+
+//try catch asynchandler--> a wrapper function to handle async functions
+//  const asyncHandler=(fn)=>async (req, res ,next)=>{
+//     try {
+//         await fn(req, res, next);
+//     } catch (error) {
+//         res.status(error.code||500).json({
+//             success:false,
+//             message:error.message
+//         })
+//     }
+//  }
