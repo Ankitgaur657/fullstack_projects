@@ -31,12 +31,12 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, " username is required");
   }
   //email validation-->
-  if (email.indexOf("@") != -1) {
+  if (email.indexOf("@") == -1) {
     throw new ApiError(400, " enter valid email");
   }
 
   //already existing validation-->
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     //queries in mongodb
     $or: [{ username }, { email }],
   });
@@ -45,8 +45,13 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "username or email already exist");
   }
 
+ //console.log(req.files);
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+ // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+ let coverImageLocalPath;
+  if(req.files&&Array.isArray(req.files.coverImage)&&req.files.coverImage.length>0){
+    coverImageLocalPath=req.files.coverImage[0].path;
+  }
   if(!avatarLocalPath){
    throw new ApiError(400,"Avatar file is required");
   }
@@ -54,6 +59,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
  const avatar= await uploadOnCloudinary(avatarLocalPath);
  const coverImage=await uploadOnCloudinary(coverImageLocalPath);
+
+ 
+
  if(!avatar){
    throw new ApiError(400, "avatar is required");
 
@@ -65,12 +73,11 @@ const registerUser = asyncHandler(async (req, res) => {
    coverImage:coverImage?.url||"",
    email,
    password,
-   username:username.toLowercase()
+   username:username.toLowerCase()
  });
   //verifying user created or not-->
- const createdUser= await User.findById(user._id).select(
-   "-password - refreshToken"
- );
+  const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
  if(!createdUser){
    throw new ApiError(500,"something went wrong while registering");
  }
